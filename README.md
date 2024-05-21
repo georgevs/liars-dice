@@ -73,6 +73,20 @@ POSSIBLE IMPROVEMENTS:
 
 
 ### Run
+PLAY:
 ```bash
-python3 app/liars_dice.py --num-bots 1 --show-hands-at-settlement
+python3 app/liars_dice.py \
+  --bot-level 2 \
+  --bots-count 1 \
+  --show-bots-capabilities \
+  --show-hands-at-settlement \
+  --wild-mode
+```
+OBSERVE:
+```bash
+python3 app/liars_dice.py \
+  --bot-level 2 \
+  --show-hands-at-settlement \
+  --wild-mode \
+  --no-user
 ```

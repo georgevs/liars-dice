@@ -3,6 +3,11 @@ import random
 
 
 class Players(List):
+  def __init__(self, *args):
+    super().__init__(*args)
+    if len(self) < 2:
+      raise ValueError('Must start with at least 2 players')
+
   def first_player(self):
     return self[0]
 
@@ -22,6 +27,10 @@ class Player:
     self.name = name
     self._dice_count = None
     self.hand = None
+
+  @property
+  def capabilities(self):
+    return None
 
   def deal_dice(self, dice_count):
     self._dice_count = dice_count  
@@ -62,6 +71,10 @@ class Bot(Player):
   def __init__(self, name, strategy):
     super().__init__(name)
     self.strategy = strategy
+
+  @property
+  def capabilities(self):
+    return self.strategy.capabilities
 
   def roll_dice(self):
     super().roll_dice()

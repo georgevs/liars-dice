@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+from players import Player
 
 
 class Config:
   def __init__(self, args):
-    self.num_bots = args.num_bots
+    self.bots_count = args.bots_count
+    self.no_user = args.no_user
+    self.wild_mode = args.wild_mode
 
 
 class Game:
@@ -75,7 +78,12 @@ class Game:
 
   def is_valid_bid(self, bid, hands):
     face_count_in_hands = sum(hand.count(bid.face) for hand in hands)
-    return bid.count <= face_count_in_hands
+    ones_count_in_hands = sum(hand.count(1) for hand in hands)
+    bid_count_in_hands = (
+      face_count_in_hands + 
+      (ones_count_in_hands if self.config.wild_mode and bid.face != 1 else 0)
+    )
+    return bid.count <= bid_count_in_hands
 
   starting_dice_count = 5
 
@@ -100,7 +108,8 @@ class Bid:
   face: int
   count: int
 
+
 @dataclass(repr=True, frozen=True)
 class Turn:
   bid: Bid
-  player: 'Player'
+  player: Player

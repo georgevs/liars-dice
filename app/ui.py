@@ -6,6 +6,8 @@ import sys
 class Config:
   def __init__(self, args):
     self.show_hands_at_settlement = args.show_hands_at_settlement
+    self.show_bots_capabilities = args.show_bots_capabilities
+    self.wild_mode = args.wild_mode
 
 
 class Ui:
@@ -17,15 +19,36 @@ class Ui:
     sys.exit(0)
 
   def announce_game_start(self):
-    print(f'Game start. Exit with Ctrl+C.', end='\n\n')
+    print(' '.join([
+      f"Game start{' in wild mode' if self.config.wild_mode else ''}.",
+      'Exit with Ctrl+C.'
+    ]), end='\n\n')
 
   def announce_round_start(self, round, first_player):
     players_names = ', '.join(player.name for player in round.players)
     print(' '.join([
       f'Round {round.num_round} start.',
-      f'There are {len(round.players)} players: {players_names}.',
+      f'There are {len(round.players)} players in this round: {players_names}.',
       f'Player {first_player.name} is first.'
     ]))
+    if self.config.show_bots_capabilities:
+      capabilities = set().union(
+        *[capabilities for player in round.players if (capabilities := player.capabilities)]
+      )
+      labels = list(filter(None, [Ui.capabilities_labels.get(it) for it in capabilities]))
+      labels = (
+        None if not labels 
+        else labels[0] if len(labels) <= 1
+        else f'{labels[0]} and {labels[1]}' if len(labels) <= 2
+        else ', and '.join([ ', '.join(labels[:-1]), labels[-1]])
+      )
+      if labels:
+        print(f"Beware, bots can {labels}!")
+
+  capabilities_labels = {
+    'can_choose_randomly': 'choose randomly',
+    'can_bluff': 'bluff'
+  }  
 
   def peek_hand(self, hand):
     print(f"User's hand is {hand}")
@@ -71,16 +94,20 @@ class Ui:
   def announce_challenge_settlement(self, current_bid, players_hands):
     face_count = sum(hand.count(current_bid.face) for hand in players_hands.values())
     print(f'There are {face_count} die with face {current_bid.face} on the whole table.')
+    if self.config.wild_mode and current_bid.face != 1:
+      ones_count = sum(hand.count(1) for hand in players_hands.values()) 
+      print(f'Also, there are {ones_count} die with face 1 on the whole table.')
+      print(f'The total bid count id {face_count + ones_count}.')
     if self.config.show_hands_at_settlement:
       print('Players hands:')
       for player, hand in players_hands.items():
         print(f"\t{player.name}'s hand is {hand}.")
 
-  def announce_player_dropped(self, looser_player):
-    print(f'Player {looser_player.name} dropped from the game.')  
-
   def announce_round_complete(self, looser_player):
     print(f'Player {looser_player.name} lost the round.', end='\n\n')
+
+  def announce_player_dropped(self, looser_player):
+    print(f'Player {looser_player.name} dropped from the game.')  
 
   def announce_game_complete(self, winner_player):
     print(f'Player {winner_player.name} wins the game!', end='\n\n')
